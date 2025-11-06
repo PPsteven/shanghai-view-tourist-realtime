@@ -15,7 +15,7 @@ from typing import Dict, List, Optional
 OSS_ACCESS_KEY_ID = os.getenv('OSS_ACCESS_KEY_ID')
 OSS_ACCESS_KEY_SECRET = os.getenv('OSS_ACCESS_KEY_SECRET')
 OSS_ENDPOINT = os.getenv('OSS_ENDPOINT', 'oss-cn-shanghai.aliyuncs.com')
-OSS_BUCKET_NAME = "shanghai-tourist-traffic"
+OSS_BUCKET_NAME = os.getenv('OSS_BUCKET_NAME', 'shanghai-tourist-traffic')
 
 DATA_BY_DATE_PREFIX = 'tourist_data/by_date/'
 DATA_BY_NAME_PREFIX = 'tourist_data/by_name/'
@@ -108,7 +108,7 @@ class TouristCrawler:
         """按日期存储数据"""
         try:
             current_date = datetime.now().strftime('%Y/%m/%d')
-            object_key = f"{DATA_BY_DATE_PREFIX}{current_date}/tourist_data.json"
+            object_key = f"{DATA_BY_DATE_PREFIX}{current_date}/data.json"
             
             existing_data = self.get_existing_data(object_key)
             existing_data.append(data)

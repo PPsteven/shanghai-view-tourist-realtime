@@ -1,4 +1,4 @@
-name: 上海旅游景点数据爬取
+name: shanghai-tourist-traffic-crawler
 
 on:
   schedule:
@@ -9,6 +9,7 @@ on:
 jobs:
   crawl-tourist-data:
     runs-on: ubuntu-latest
+    environment: prod
     
     steps:
     - name: 检出代码
@@ -23,14 +24,13 @@ jobs:
     - name: 安装依赖
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements_simple.txt
+        pip install -r requirements.txt
         
     - name: 运行爬虫脚本
       env:
         OSS_ACCESS_KEY_ID: ${{ secrets.OSS_ACCESS_KEY_ID }}
         OSS_ACCESS_KEY_SECRET: ${{ secrets.OSS_ACCESS_KEY_SECRET }}
         OSS_ENDPOINT: ${{ secrets.OSS_ENDPOINT }}
-        OSS_BUCKET_NAME: ${{ secrets.OSS_BUCKET_NAME }}
       run: |
         python tourist_crawler.py
         
