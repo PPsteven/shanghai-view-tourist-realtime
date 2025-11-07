@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import ReactECharts from 'echarts-for-react'
 import './HomePage.css'
@@ -53,15 +53,28 @@ function HomePage() {
     navigate(`/spot/${spotCode}`)
   }
 
-  const getDistrictStatistics = () => {
-    if (!dailyData[selectedDate]) return null
+  // Get current spots with deduplication
+  const currentSpots = useMemo(() => {
+    if (!dailyData[selectedDate]) return []
 
-    // Extract spots from data.data[].rows structure
     const dataRecords = dailyData[selectedDate].data.data || []
-    const spots = dataRecords.flatMap(record => record.rows || [])
+    const allSpots = dataRecords.flatMap(record => record.rows || [])
+
+    // Remove duplicates by CODE, keep the latest data
+    const spotMap = new Map()
+    allSpots.forEach(spot => {
+      spotMap.set(spot.CODE, spot)
+    })
+
+    return Array.from(spotMap.values())
+  }, [dailyData, selectedDate])
+
+  const getDistrictStatistics = useMemo(() => {
+    if (currentSpots.length === 0) return null
+
     const districtMap = new Map()
 
-    spots.forEach(spot => {
+    currentSpots.forEach(spot => {
       const district = spot.DNAME || '未知'
       if (!districtMap.has(district)) {
         districtMap.set(district, {
@@ -82,10 +95,10 @@ function HomePage() {
       name,
       ...stat
     }))
-  }
+  }, [currentSpots])
 
-  const getDistrictChartOption = () => {
-    const stats = getDistrictStatistics()
+  const districtChartOption = useMemo(() => {
+    const stats = getDistrictStatistics
     if (!stats) return {}
 
     return {
@@ -148,15 +161,12 @@ function HomePage() {
         }
       ]
     }
-  }
+  }, [getDistrictStatistics])
 
-  const getTopSpotsChartOption = () => {
-    if (!dailyData[selectedDate]) return {}
+  const topSpotsChartOption = useMemo(() => {
+    if (currentSpots.length === 0) return {}
 
-    // Extract spots from data.data[].rows structure
-    const dataRecords = dailyData[selectedDate].data.data || []
-    const spots = dataRecords.flatMap(record => record.rows || [])
-    const openSpots = spots.filter(s => s.TYPE === '正常')
+    const openSpots = currentSpots.filter(s => s.TYPE === '正常')
     const topSpots = openSpots
       .sort((a, b) => (b.NUM || 0) - (a.NUM || 0))
       .slice(0, 10)
@@ -212,7 +222,7 @@ function HomePage() {
         }
       ]
     }
-  }
+  }, [currentSpots])
 
   if (loading) {
     return <div className="loading">加载中...</div>
@@ -223,9 +233,6 @@ function HomePage() {
   }
 
   const currentData = dailyData[selectedDate]
-  // Extract spots from data.data[].rows structure
-  const dataRecords = currentData?.data?.data || []
-  const spots = dataRecords.flatMap(record => record.rows || [])
 
   return (
     <div className="home-page">
@@ -244,18 +251,18 @@ function HomePage() {
       <div className="summary-cards">
         <div className="card">
           <div className="card-title">总景点数</div>
-          <div className="card-value">{spots.length}</div>
+          <div className="card-value">{currentSpots.length}</div>
         </div>
         <div className="card">
           <div className="card-title">开放景点</div>
           <div className="card-value">
-            {spots.filter(s => s.TYPE === '正常').length}
+            {currentSpots.filter(s => s.TYPE === '正常').length}
           </div>
         </div>
         <div className="card">
           <div className="card-title">总游客数</div>
           <div className="card-value">
-            {spots.reduce((sum, s) => sum + (s.NUM || 0), 0).toLocaleString()}
+            {currentSpots.reduce((sum, s) => sum + (s.NUM || 0), 0).toLocaleString()}
           </div>
         </div>
         <div className="card">
@@ -270,17 +277,27 @@ function HomePage() {
 
       <div className="charts-section">
         <div className="chart-container">
-          <ReactECharts option={getDistrictChartOption()} style={{ height: '400px' }} />
+          <ReactECharts
+            option={districtChartOption}
+            style={{ height: '400px' }}
+            notMerge={true}
+            lazyUpdate={true}
+          />
         </div>
         <div className="chart-container">
-          <ReactECharts option={getTopSpotsChartOption()} style={{ height: '400px' }} />
+          <ReactECharts
+            option={topSpotsChartOption}
+            style={{ height: '400px' }}
+            notMerge={true}
+            lazyUpdate={true}
+          />
         </div>
       </div>
 
       <div className="spots-list">
         <h2>景点列表</h2>
         <div className="spots-grid">
-          {spots.map((spot) => (
+          {currentSpots.map((spot) => (
             <div
               key={spot.CODE}
               className={`spot-card ${spot.TYPE === '正常' ? 'open' : 'closed'}`}
