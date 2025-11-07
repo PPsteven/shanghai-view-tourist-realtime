@@ -18,6 +18,7 @@ concurrency:
 
 jobs:
   build:
+    environment: prod
     runs-on: ubuntu-latest
 
     steps:
@@ -46,7 +47,6 @@ jobs:
           OSS_ACCESS_KEY_ID: ${{ secrets.OSS_ACCESS_KEY_ID }}
           OSS_ACCESS_KEY_SECRET: ${{ secrets.OSS_ACCESS_KEY_SECRET }}
           OSS_ENDPOINT: ${{ secrets.OSS_ENDPOINT }}
-          OSS_BUCKET_NAME: ${{ secrets.OSS_BUCKET_NAME }}
         run: |
           python fetch_data.py
 
