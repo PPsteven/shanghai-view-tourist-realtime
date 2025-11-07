@@ -28,7 +28,7 @@ function HomePage() {
         dates.push(dateStr)
 
         try {
-          const response = await fetch(`/data/${dateStr}.json`)
+          const response = await fetch(`./data/${dateStr}.json`)
           if (response.ok) {
             const jsonData = await response.json()
             data.push({
