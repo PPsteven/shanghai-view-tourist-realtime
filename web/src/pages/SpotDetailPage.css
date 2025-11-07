@@ -1,0 +1,237 @@
+.spot-detail-page {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.back-button {
+  padding: 0.75rem 1.5rem;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  margin-bottom: 2rem;
+  transition: background 0.3s ease;
+}
+
+.back-button:hover {
+  background: #5568d3;
+}
+
+.spot-header {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+}
+
+.spot-header h1 {
+  color: #333;
+  margin-bottom: 1rem;
+  font-size: 2rem;
+}
+
+.spot-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  color: #666;
+}
+
+.meta-item {
+  font-size: 0.95rem;
+}
+
+.current-status {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+}
+
+.current-status h2 {
+  margin-bottom: 1.5rem;
+  color: #333;
+}
+
+.status-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.status-card {
+  background: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.status-label {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 0.5rem;
+}
+
+.status-value {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #667eea;
+}
+
+.status-value.small {
+  font-size: 1rem;
+}
+
+.status-value.comfort-舒适 {
+  color: #91cc75;
+}
+
+.status-value.comfort-较舒适 {
+  color: #fac858;
+}
+
+.status-value.comfort-一般 {
+  color: #ee6666;
+}
+
+.status-value.status-open {
+  color: #91cc75;
+}
+
+.status-value.status-closed {
+  color: #ee6666;
+}
+
+.weather-info {
+  background: #e3f2fd;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-top: 1rem;
+  color: #1976d2;
+}
+
+.charts-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.chart-container {
+  background: white;
+  padding: 1rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.chart-container.full-width {
+  grid-column: 1 / -1;
+}
+
+.data-table {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.data-table h2 {
+  margin-bottom: 1.5rem;
+  color: #333;
+}
+
+.table-container {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+th {
+  background: #f8f9fa;
+  font-weight: bold;
+  color: #333;
+}
+
+tr:hover {
+  background: #f8f9fa;
+}
+
+.comfort-badge,
+.status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: bold;
+  display: inline-block;
+}
+
+.comfort-badge.comfort-舒适 {
+  background: #91cc75;
+  color: white;
+}
+
+.comfort-badge.comfort-较舒适 {
+  background: #fac858;
+  color: white;
+}
+
+.comfort-badge.comfort-一般 {
+  background: #ee6666;
+  color: white;
+}
+
+.status-badge.status-open {
+  background: #91cc75;
+  color: white;
+}
+
+.status-badge.status-closed {
+  background: #ee6666;
+  color: white;
+}
+
+@media (max-width: 768px) {
+  .spot-detail-page {
+    padding: 1rem;
+  }
+
+  .spot-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .spot-meta {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .charts-section {
+    grid-template-columns: 1fr;
+  }
+
+  .chart-container.full-width {
+    grid-column: 1;
+  }
+
+  table {
+    font-size: 0.85rem;
+  }
+
+  th, td {
+    padding: 0.5rem;
+  }
+}
