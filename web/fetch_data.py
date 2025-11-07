@@ -100,7 +100,7 @@ class DataFetcher:
         return list(spot_codes)
 
     def fetch_spot_data(self, spot_code, spot_name=None):
-        """获取单个景点的数据"""
+        """获取单个景点的数据，支持按月份存储的新格式"""
         # 尝试多种可能的文件名格式
         possible_names = []
 
@@ -112,22 +112,50 @@ class DataFetcher:
         # 也尝试用代码查找
         possible_names.append(spot_code)
 
+        # 尝试获取最近几个月的数据
+        months_to_try = []
+        current_date = datetime.now()
+        for i in range(3):  # 尝试最近3个月
+            month_date = current_date.replace(day=1) - timedelta(days=i*30)
+            month_str = month_date.strftime('%Y-%m')
+            months_to_try.append(month_str)
+
+        all_data = []
+        found_any = False
+
         for name in possible_names:
-            object_key = f"{DATA_BY_NAME_PREFIX}{name}/data.json"
+            for month in months_to_try:
+                object_key = f"{DATA_BY_NAME_PREFIX}{name}/{month}.json"
 
-            try:
-                if self.bucket.object_exists(object_key):
-                    result = self.bucket.get_object(object_key)
-                    content = result.read().decode('utf-8')
+                try:
+                    if self.bucket.object_exists(object_key):
+                        result = self.bucket.get_object(object_key)
+                        content = result.read().decode('utf-8')
+                        month_data = json.loads(content)
+                        
+                        # 添加月份信息到数据中
+                        month_data['month'] = month
+                        all_data.append(month_data)
+                        found_any = True
+                        
+                except Exception as e:
+                    continue
 
-                    # 保存到本地 - 使用景点代码作为文件名
-                    output_file = self.spots_dir / f"{spot_code}.json"
-                    with open(output_file, 'w', encoding='utf-8') as f:
-                        f.write(content)
+        if found_any:
+            # 合并所有月份的数据
+            combined_data = {
+                'spot_code': spot_code,
+                'spot_name': spot_name,
+                'last_updated': datetime.now().isoformat(),
+                'months_data': all_data
+            }
+            
+            # 保存到本地 - 使用景点代码作为文件名
+            output_file = self.spots_dir / f"{spot_code}.json"
+            with open(output_file, 'w', encoding='utf-8') as f:
+                json.dump(combined_data, f, ensure_ascii=False, indent=2)
 
-                    return True
-            except Exception as e:
-                continue
+            return True
 
         return False
 

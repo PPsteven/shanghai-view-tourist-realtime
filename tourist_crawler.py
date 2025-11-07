@@ -134,14 +134,16 @@ class TouristCrawler:
         return filename.strip() or 'unknown'
     
     def upload_by_name(self, tourist_spots: List[Dict]) -> bool:
-        """按景点名称存储数据"""
+        """按景点名称存储数据，在每个景点目录下按月份存储"""
         success_count = 0
+        current_month = datetime.now().strftime('%Y-%m')
         
         for spot in tourist_spots:
             try:
                 spot_name = spot.get('NAME', '未知景点')
                 safe_name = self.sanitize_filename(spot_name)
-                object_key = f"{DATA_BY_NAME_PREFIX}{safe_name}/data.json"
+                # 修改为在景点目录下按月份存储
+                object_key = f"{DATA_BY_NAME_PREFIX}{safe_name}/{current_month}.json"
                 
                 existing_data = self.get_existing_data(object_key)
                 existing_data.append(spot)
@@ -150,6 +152,7 @@ class TouristCrawler:
                     'spot_name': spot_name,
                     'spot_code': spot.get('CODE'),
                     'district': spot.get('DNAME'),
+                    'month': current_month,
                     'last_updated': datetime.now().isoformat(),
                     'total_records': len(existing_data),
                     'data': existing_data

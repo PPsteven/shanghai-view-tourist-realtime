@@ -15,12 +15,53 @@ function SpotDetailPage() {
 
   const loadSpotData = async () => {
     try {
-      const response = await fetch(`./data/spots/${spotCode}.json`)
+      const response = await fetch(`/data/spots/${spotCode}.json`)
+      
       if (response.ok) {
-        const data = await response.json()
-        setSpotData(data)
+        const rawData = await response.json()
+        
+        // 处理新的按月存储的数据结构
+        if (rawData.months_data && rawData.months_data.length > 0) {
+          // 合并所有月份的数据
+          const allData = []
+          let totalRecords = 0
+          let lastUpdated = rawData.last_updated
+          let spotName = rawData.spot_name
+          let district = ''
+          
+          rawData.months_data.forEach(monthData => {
+            if (monthData.data && monthData.data.length > 0) {
+              allData.push(...monthData.data)
+              totalRecords += monthData.total_records || monthData.data.length
+              if (!district && monthData.district) {
+                district = monthData.district
+              }
+              // 使用最新的更新时间
+              if (monthData.last_updated && new Date(monthData.last_updated) > new Date(lastUpdated)) {
+                lastUpdated = monthData.last_updated
+              }
+            }
+          })
+          
+          // 构造兼容原有格式的数据结构
+          const processedData = {
+            spot_name: spotName,
+            spot_code: rawData.spot_code,
+            district: district,
+            last_updated: lastUpdated,
+            total_records: totalRecords,
+            data: allData
+          }
+          
+          setSpotData(processedData)
+        } else if (rawData.data) {
+          // 兼容旧的数据格式
+          setSpotData(rawData)
+        } else {
+          console.error('No valid data structure found in response')
+        }
       } else {
-        console.error('Failed to load spot data')
+        console.error('Failed to load spot data, status:', response.status)
       }
     } catch (error) {
       console.error('Error loading spot data:', error)
