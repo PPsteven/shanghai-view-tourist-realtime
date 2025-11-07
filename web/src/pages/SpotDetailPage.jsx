@@ -15,7 +15,7 @@ function SpotDetailPage() {
 
   const loadSpotData = async () => {
     try {
-      const response = await fetch(`/data/spots/${spotCode}.json`)
+      const response = await fetch(`./data/spots/${spotCode}.json`)
       
       if (response.ok) {
         const rawData = await response.json()
