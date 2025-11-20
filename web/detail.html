@@ -228,13 +228,17 @@
                     },
                     dayLabel: {
                         firstDay: 1, // 周一开始
-                        nameMap: 'cn'
+                        nameMap: 'cn',
+                        margin: 5,
+                        position: 'end'
                     },
                     monthLabel: {
                         show: true,
-                        nameMap: 'cn'
+                        nameMap: 'cn',
+                        margin: 5
                     },
-                    yearLabel: { show: false }
+                    yearLabel: { show: false },
+                    orient: 'vertical' // 垂直方向显示，星期作为列
                 },
                 series: {
                     type: 'heatmap',
