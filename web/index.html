@@ -1,12 +1,314 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>上海旅游景点实时数据</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>上海旅游景点实时客流概览</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        body {
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f7fa;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 12px 0 rgba(0,0,0,0.1);
+        }
+        #top10-chart {
+            width: 100%;
+            height: 400px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ebeef5;
+        }
+        th {
+            background-color: #f5f7fa;
+            color: #909399;
+            font-weight: 600;
+        }
+        tr:hover {
+            background-color: #f5f7fa;
+        }
+        .spot-link {
+            color: #409eff;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .spot-link:hover {
+            text-decoration: underline;
+        }
+        .status-tag {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        .status-normal {
+            background-color: #f0f9eb;
+            color: #67c23a;
+        }
+        .status-warning {
+            background-color: #fdf6ec;
+            color: #e6a23c;
+        }
+        .status-closed {
+            background-color: #f4f4f5;
+            color: #909399;
+        }
+        .update-time {
+            text-align: right;
+            color: #909399;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>上海旅游景点实时客流概览</h1>
+        <div id="update-time" class="update-time"></div>
+
+        <div class="card">
+            <h2>近5天全上海客流趋势对比</h2>
+            <div id="trend-chart" style="width: 100%; height: 400px;"></div>
+        </div>
+
+        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+            <div class="card" style="flex: 1; min-width: 400px;">
+                <h2>近5天最热景点 Top 10 (客流峰值总和)</h2>
+                <div id="top10-chart" style="width: 100%; height: 500px;"></div>
+            </div>
+            <div class="card" style="flex: 1; min-width: 400px;">
+                <h2>客流分布 (按5天内最大峰值)</h2>
+                <div id="treemap-chart" style="width: 100%; height: 500px;"></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>所有景点实时状态列表</h2>
+            <div style="overflow-x: auto;">
+                <table id="spots-table">
+                    <thead>
+                        <tr>
+                            <th>景点名称</th>
+                            <th>等级</th>
+                            <th>当前人数</th>
+                            <th>最大承载量</th>
+                            <th>舒适度</th>
+                            <th>状态</th>
+                            <th>更新时间</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- 数据将通过JS插入 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 初始化图表
+        const trendChart = echarts.init(document.getElementById('trend-chart'));
+        const top10Chart = echarts.init(document.getElementById('top10-chart'));
+        const treemapChart = echarts.init(document.getElementById('treemap-chart'));
+
+        // 获取数据
+        fetch('data/overview.json')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('update-time').textContent = `数据生成时间: ${data.generated_at}`;
+                
+                renderTrendChart(data.time_buckets, data.trend_series);
+                renderTop10Chart(data.top_10);
+                renderTreemapChart(data.treemap_data);
+                renderTable(data.all_spots);
+            })
+            .catch(error => {
+                console.error('Error loading data:', error);
+                document.querySelector('.container').innerHTML += '<p style="color:red;text-align:center">加载数据失败，请确保已运行数据处理脚本。</p>';
+            });
+
+        function renderTrendChart(buckets, seriesData) {
+            const option = {
+                tooltip: {
+                    trigger: 'axis'
+                },
+                legend: {
+                    data: seriesData.map(s => s.name),
+                    bottom: 0
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '10%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    boundaryGap: false,
+                    data: buckets
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '总客流'
+                },
+                series: seriesData
+            };
+            trendChart.setOption(option);
+        }
+
+        function renderTop10Chart(top10Data) {
+            const names = top10Data.map(item => item.NAME);
+            const values = top10Data.map(item => item.SUM_PEAK);
+
+            const option = {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    }
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'value',
+                    name: '5日峰值总和'
+                },
+                yAxis: {
+                    type: 'category',
+                    data: names,
+                    inverse: true,
+                    axisLabel: {
+                        interval: 0,
+                        width: 120,
+                        overflow: 'truncate'
+                    }
+                },
+                series: [
+                    {
+                        name: '客流峰值总和',
+                        type: 'bar',
+                        data: values,
+                        itemStyle: {
+                            color: '#67c23a'
+                        },
+                        label: {
+                            show: true,
+                            position: 'right'
+                        }
+                    }
+                ]
+            };
+            top10Chart.setOption(option);
+        }
+
+        function renderTreemapChart(treemapData) {
+            const option = {
+                tooltip: {
+                    formatter: function (info) {
+                        var value = info.value;
+                        var treePathInfo = info.treePathInfo;
+                        var treePath = [];
+                        for (var i = 1; i < treePathInfo.length; i++) {
+                            treePath.push(treePathInfo[i].name);
+                        }
+                        return [
+                            '<div class="tooltip-title">' + echarts.format.encodeHTML(treePath.join('/')) + '</div>',
+                            '最大峰值: ' + echarts.format.addCommas(value)
+                        ].join('');
+                    }
+                },
+                series: [
+                    {
+                        name: '上海景点分布',
+                        type: 'treemap',
+                        visibleMin: 300,
+                        label: {
+                            show: true,
+                            formatter: '{b}'
+                        },
+                        itemStyle: {
+                            borderColor: '#fff'
+                        },
+                        levels: [
+                            {
+                                itemStyle: {
+                                    borderColor: '#777',
+                                    borderWidth: 0,
+                                    gapWidth: 1
+                                }
+                            },
+                            {
+                                colorSaturation: [0.35, 0.5],
+                                itemStyle: {
+                                    borderWidth: 5,
+                                    gapWidth: 1,
+                                    borderColorSaturation: 0.6
+                                }
+                            }
+                        ],
+                        data: treemapData
+                    }
+                ]
+            };
+            treemapChart.setOption(option);
+        }
+
+        // 响应式调整
+        window.addEventListener('resize', () => {
+            trendChart.resize();
+            top10Chart.resize();
+            treemapChart.resize();
+        });
+
+        function renderTable(spots) {
+            const tbody = document.querySelector('#spots-table tbody');
+            tbody.innerHTML = spots.map(spot => {
+                let statusClass = 'status-normal';
+                if (spot.TYPE === '闭园') statusClass = 'status-closed';
+                else if (spot.SSD === '拥挤') statusClass = 'status-warning';
+
+                // 处理URL安全的名称
+                const safeName = spot.NAME.replace(/\//g, '_').replace(/\\/g, '_');
+
+                return `
+                    <tr>
+                        <td><a href="detail.html?name=${encodeURIComponent(safeName)}" class="spot-link">${spot.NAME}</a></td>
+                        <td>${spot.GRADE || '-'}</td>
+                        <td>${spot.NUM}</td>
+                        <td>${spot.MAX_NUM}</td>
+                        <td>${spot.SSD || '-'}</td>
+                        <td><span class="status-tag ${statusClass}">${spot.TYPE || '开放'}</span></td>
+                        <td>${spot.TIME || '-'}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+    </script>
+</body>
 </html>
