@@ -59,10 +59,10 @@ def process_overview_data(bucket):
     today = datetime.now()
     # today = datetime(2025, 11, 20) # Debug
     
-    # 1. 准备时间轴 buckets (09:00 - 21:00, 每30分钟)
+    # 1. 准备时间轴 buckets (09:00 - 23:00, 每30分钟)
     time_buckets = []
     start_time = datetime.strptime("09:00", "%H:%M")
-    end_time = datetime.strptime("21:00", "%H:%M")
+    end_time = datetime.strptime("23:00", "%H:%M")
     current = start_time
     while current <= end_time:
         time_buckets.append(current.strftime("%H:%M"))
