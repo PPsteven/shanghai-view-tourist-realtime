@@ -1,10 +1,11 @@
 name: shanghai-tourist-traffic-crawler
 
-on:
-  schedule:
-    # 每20分钟运行一次 (UTC时间)
-    - cron: '*/20 * * * *'
-  workflow_dispatch:  # 允许手动触发
+# 工作流已暂时关闭
+# on:
+#   schedule:
+#     # 每20分钟运行一次 (UTC时间)
+#     - cron: '*/20 * * * *'
+#   workflow_dispatch:  # 允许手动触发
 
 jobs:
   crawl-tourist-data:

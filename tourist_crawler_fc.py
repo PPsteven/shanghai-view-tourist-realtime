@@ -1,11 +1,17 @@
-#!/usr/bin/env python3
-"""上海旅游景点实时数据爬取器 - 简化版"""
+# -*- coding: utf-8 -*-
+
+# To enable the initializer feature (https://help.aliyun.com/document_detail/2513452.html)
+# please implement the initializer function as below：
+# def initializer(context):
+#   logger = logging.getLogger()
+#   logger.info('initializing')
 
 import os
 import requests
 import json
 import oss2
 from datetime import datetime
+import logging
 
 # 配置
 OSS_ACCESS_KEY_ID = os.getenv('OSS_ACCESS_KEY_ID')
@@ -118,5 +124,6 @@ def main():
     except Exception as e:
         print(f"程序运行失败: {e}")
 
-if __name__ == '__main__':
+def handler(event, context):
     main()
+    return '爬取完成'
