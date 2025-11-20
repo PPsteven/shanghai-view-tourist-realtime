@@ -32,7 +32,9 @@
 - **核心依赖**:
   - `requests`: HTTP 请求库
   - `oss2`: 阿里云 OSS SDK
-- **部署平台**: GitHub Actions
+- **部署平台**: 
+  - GitHub Actions（已暂停）
+  - 阿里云函数计算 FC（推荐）
 - **存储服务**: 阿里云对象存储 OSS
 - **前端展示**: React + Vite + GitHub Pages
 
@@ -94,6 +96,7 @@ https://tourist.whlyj.sh.gov.cn/api/statistics/getViewTourist
 
 ```
 ├── tourist_crawler.py          # 主爬虫脚本（简化版）
+├── tourist_crawler_fc.py       # 阿里云函数计算版本
 ├── migrate_oss_data.py         # OSS历史数据迁移脚本
 ├── requirements.txt            # Python依赖
 ├── .github/workflows/          # GitHub Actions工作流
@@ -140,7 +143,13 @@ npm run dev
 
 ### 自动化运行
 
-项目通过 GitHub Actions 实现每20分钟自动运行一次数据采集任务（目前已暂停）。
+项目支持两种自动化运行方式：
+
+1. **GitHub Actions**（已暂停）：
+   项目通过 GitHub Actions 实现每20分钟自动运行一次数据采集任务（目前已暂停）。
+
+2. **阿里云函数计算 FC**（推荐）：
+   使用 `tourist_crawler_fc.py` 脚本部署到阿里云函数计算服务，通过设置触发器实现定时执行。相比 GitHub Actions，具有更高的执行效率和更低的资源消耗。
 
 ## 核心脚本说明
 
@@ -176,6 +185,30 @@ npm run dev
 - 默认预览模式，不会修改数据
 - 自动备份原始文件
 - 详细的操作日志和进度显示
+
+### tourist_crawler_fc.py - 阿里云函数计算版本
+
+**主要特性：**
+- 基于阿里云函数计算（Function Compute）实现的无服务器版本
+- 替代 GitHub Actions 的定时任务执行方式
+- 保持与原版相同的数据处理逻辑和存储结构
+- 更高的执行效率和更低的资源消耗
+
+**部署方式：**
+1. 在阿里云函数计算服务中创建新的函数
+2. 上传 `tourist_crawler_fc.py` 脚本作为函数代码
+3. 配置环境变量：
+   - `OSS_ACCESS_KEY_ID`: 阿里云访问密钥 ID
+   - `OSS_ACCESS_KEY_SECRET`: 阿里云访问密钥 Secret
+   - `OSS_ENDPOINT`: OSS 服务节点地址（可选，默认为 oss-cn-shanghai.aliyuncs.com）
+   - `OSS_BUCKET_NAME`: OSS 存储桶名称（可选，默认为 shanghai-tourist-traffic）
+4. 设置触发器，配置定时执行规则（如每20分钟执行一次）
+
+**优势：**
+- 无需管理服务器基础设施
+- 按需计费，成本更低
+- 自动扩缩容，高可用性
+- 与阿里云生态系统无缝集成
 
 ## 部署配置
 
@@ -273,3 +306,11 @@ A: 检查 `web/public/data/` 目录下是否有最新的数据文件，以及Git
   - 优化存储结构，使用追加写入
   - 完善前端可视化
 - **v1.0** (2023): 初始版本，基础爬虫功能
+
+## 预览截图
+
+### 主页预览
+![主页预览](preview-1.png)
+
+### 详情页预览
+![详情页预览](preview-2.png)
