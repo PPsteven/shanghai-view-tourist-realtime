@@ -25,13 +25,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: web/package.json
-
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
@@ -48,15 +41,7 @@ jobs:
           OSS_ACCESS_KEY_SECRET: ${{ secrets.OSS_ACCESS_KEY_SECRET }}
           OSS_ENDPOINT: ${{ secrets.OSS_ENDPOINT }}
         run: |
-          python fetch_data.py
-
-      - name: Install Node dependencies
-        working-directory: ./web
-        run: npm ci
-
-      - name: Build website
-        working-directory: ./web
-        run: npm run build
+          python data_loader.py
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
@@ -64,7 +49,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './web/dist'
+          path: './web'
 
   deploy:
     environment:
