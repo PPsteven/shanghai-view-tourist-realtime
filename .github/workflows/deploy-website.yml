@@ -2,8 +2,8 @@ name: Deploy Website to GitHub Pages
 
 on:
   schedule:
-    # 每天早上8点(北京时间)运行，UTC时间为0点
-    - cron: '0 0 * * *'
+    # 每天晚上23点(北京时间)运行，UTC时间为15点
+    - cron: '0 15 * * *'
   workflow_dispatch:  # 允许手动触发
 
 permissions:
