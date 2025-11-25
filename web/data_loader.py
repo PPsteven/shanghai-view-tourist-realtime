@@ -30,8 +30,8 @@ def get_bucket():
     auth = oss2.Auth(OSS_ACCESS_KEY_ID, OSS_ACCESS_KEY_SECRET)
     return oss2.Bucket(auth, OSS_ENDPOINT, OSS_BUCKET_NAME)
 
-def fetch_jsonl_from_oss(bucket, object_key):
-    """从OSS读取JSONL文件并返回解析后的列表"""
+def fetch_overview_jsonl_from_oss(bucket, object_key):
+    """从OSS读取概览JSONL文件并返回解析后的景点列表（格式：data.rows）"""
     try:
         if not bucket.object_exists(object_key):
             logging.warning(f"文件不存在: {object_key}")
@@ -40,16 +40,44 @@ def fetch_jsonl_from_oss(bucket, object_key):
         obj = bucket.get_object(object_key)
         content = obj.read().decode('utf-8')
         lines = content.strip().split('\n')
-        data = []
+        spots = []
         for line in lines:
             try:
                 if line.strip():
-                    data.append(json.loads(line))
+                    record = json.loads(line)
+                    # 概览数据结构：从 data.rows 中提取景点数据
+                    if 'data' in record and 'rows' in record['data']:
+                        spots.extend(record['data']['rows'])
             except json.JSONDecodeError:
                 continue
-        return data
+        return spots
     except Exception as e:
-        logging.error(f"读取文件失败 {object_key}: {e}")
+        logging.error(f"读取概览文件失败 {object_key}: {e}")
+        return []
+
+def fetch_spot_detail_jsonl_from_oss(bucket, object_key):
+    """从OSS读取景点详情JSONL文件并返回解析后的景点数据列表（格式：spot）"""
+    try:
+        if not bucket.object_exists(object_key):
+            logging.warning(f"文件不存在: {object_key}")
+            return []
+        
+        obj = bucket.get_object(object_key)
+        content = obj.read().decode('utf-8')
+        lines = content.strip().split('\n')
+        spots = []
+        for line in lines:
+            try:
+                if line.strip():
+                    record = json.loads(line)
+                    # 景点详情数据结构：从 spot 中提取景点数据
+                    if 'spot' in record:
+                        spots.append(record['spot'])
+            except json.JSONDecodeError:
+                continue
+        return spots
+    except Exception as e:
+        logging.error(f"读取景点详情文件失败 {object_key}: {e}")
         return []
 
 def process_overview_data(bucket):
@@ -79,31 +107,29 @@ def process_overview_data(bucket):
         object_key = f"tourist_data/{date_str}.jsonl"
         
         logging.info(f"正在获取: {object_key}")
-        daily_records = fetch_jsonl_from_oss(bucket, object_key)
+        daily_records = fetch_overview_jsonl_from_oss(bucket, object_key)
         
         # --- 处理单日趋势 ---
         # 提取所有记录并按时间排序
         events = []
-        for record in daily_records:
-            if 'spot' in record:
-                spot = record['spot']
-                t_str = spot.get('TIME', '')
-                # 尝试解析时间，格式可能是 "YYYY-MM-DD HH:mm" 或 "HH:mm"
-                try:
-                    if len(t_str) > 10:
-                        t_obj = datetime.strptime(t_str, "%Y-%m-%d %H:%M")
-                    else:
-                        # 只有时间的情况，加上日期
-                        t_obj = datetime.strptime(f"{date.strftime('%Y-%m-%d')} {t_str}", "%Y-%m-%d %H:%M")
-                    
-                    events.append({
-                        'time': t_obj,
-                        'name': spot.get('NAME'),
-                        'num': int(spot.get('NUM', 0)),
-                        'spot_data': spot
-                    })
-                except Exception:
-                    continue
+        for spot in daily_records:
+            t_str = spot.get('TIME', '')
+            # 尝试解析时间，格式可能是 "YYYY-MM-DD HH:mm" 或 "HH:mm"
+            try:
+                if len(t_str) > 10:
+                    t_obj = datetime.strptime(t_str, "%Y-%m-%d %H:%M")
+                else:
+                    # 只有时间的情况，加上日期
+                    t_obj = datetime.strptime(f"{date.strftime('%Y-%m-%d')} {t_str}", "%Y-%m-%d %H:%M")
+                
+                events.append({
+                    'time': t_obj,
+                    'name': spot.get('NAME'),
+                    'num': int(spot.get('NUM', 0)),
+                    'spot_data': spot
+                })
+            except Exception:
+                continue
         
         events.sort(key=lambda x: x['time'])
         
@@ -232,7 +258,7 @@ def process_spot_details(bucket, all_spots):
         object_key = f"{current_month_prefix}{safe_name}.jsonl"
         
         logging.info(f"处理景点: {name}")
-        records = fetch_jsonl_from_oss(bucket, object_key)
+        records = fetch_spot_detail_jsonl_from_oss(bucket, object_key)
         
         if not records:
             logging.info(f"  无数据: {object_key}")
@@ -240,12 +266,10 @@ def process_spot_details(bucket, all_spots):
             
         # 去重逻辑：按 TIME 字段去重
         unique_data = {}
-        for record in records:
-            if 'spot' in record:
-                spot_data = record['spot']
-                time_key = spot_data.get('TIME')
-                if time_key:
-                    unique_data[time_key] = spot_data
+        for spot_data in records:
+            time_key = spot_data.get('TIME')
+            if time_key:
+                unique_data[time_key] = spot_data
         
         # 转换为列表并按时间排序
         sorted_data = sorted(unique_data.values(), key=lambda x: x.get('TIME', ''))
