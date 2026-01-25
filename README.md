@@ -1,3 +1,6 @@
+<!-- 活跃状态自动更新标记，请勿删除或手动修改 -->
+当前项目在 2026-01-25 时还活跃
+
 # 上海旅游景区实时人流数据爬虫
 
 [![GitHub](https://img.shields.io/github/license/PPsteven/shanghai-view-tourist-realtime)](https://github.com/PPsteven/shanghai-view-tourist-realtime)
@@ -10,9 +13,6 @@
 多年前实现的脚本，用于定时爬取上海景区数据，用来做人流量展示的，适合用于课堂教学使用。
 由于服务器和数据库到期后就没有继续爬了，感觉比较可惜，数据连续性断了。
 昨天突发奇想，用阿里云OSS(存储) + Github Actions(定时) 可以几乎很低成本的实现这个项目，快速实现了一版，后续用这种方式，持续把好用的玩具开源出来。
-
-<!-- 活跃状态自动更新标记，请勿删除或手动修改 -->
-当前项目在 2026-01-25 时还活跃
 
 后续TODO:
 
